@@ -4,6 +4,11 @@
  * Version: 0.1.2
  * Description: The script starts the quest automatically after X hours. 
  *              You have to be the Party Leader or Quest Owner to be able to start the quest before all members have accepted the invite.
+ * Installation Guide:
+ *  1. Fill USER_ID and API_TOKEN with your UserId and the ApiToken
+ *  2. Deploy the script as WebApp
+ *  3. Copy the WebApp URL into the WEB_APP_URL variable
+ *  4. Run installAutoStartQuestTrigger(), then the createAutoStartQuestWebhooks() functions
  */
 // ------------- Set Up ---------------------------------------
 const USER_ID = "";
