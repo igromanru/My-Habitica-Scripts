@@ -16,9 +16,9 @@ const API_TOKEN = "";
 const WEB_APP_URL = "";
 // --------- Configurations -----------------------------------
 const AUTO_START_QUEST = true;
-const AUTO_START_QUEST_AFTER_X_HOURS = 12;
+const AUTO_START_QUEST_AFTER_X_HOURS = 14;
 
-// If you install the trigger, it will execute autoBuyEnchantedArmoire each X hours
+// If you install the trigger, it will execute autoStartQuest each X hours
 const TRIGGER_AUTO_START_QUEST_EACH_X_HOURS = 1;
 // ------------------------------------------------------------
 // --------- Code - Edit at your own responsibility -----------
@@ -38,6 +38,7 @@ const partyAPI = baseUrl + '/v3/groups/party';
 function autoStartQuest() {
   const questInvited = getQuestIvitedDateTime(); 
   if (questInvited && questInvited instanceof Date) {
+    console.log(`Invited to the quest: ${getTimeDifferenceToNowAsString(questInvited)}`);
     const party = getParty();
     if (party && party.quest) {
       if (party.quest.key && !party.quest.active) {
@@ -48,6 +49,7 @@ function autoStartQuest() {
           }
         }
       } else {
+        deleteQuestIvitedDateTime();
         console.log(`autoStartQuest: Skipping, no quest or the quest is already active`);
       }
     }
@@ -316,4 +318,38 @@ function getQuestIvitedDateTime() {
     return new Date(value);
   }
   return new Date();
+}
+
+function deleteQuestIvitedDateTime() {
+  ScriptProperties.deleteProperty("QUEST_INVITED_DATE_TIME");
+}
+
+function getTimeDifferenceToNowAsString(dateTime) {
+  let result = ``;
+  if (dateTime && dateTime instanceof Date) {
+    const now = new Date();
+    const timeDifference = Math.abs(now - dateTime);
+
+    const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+
+    
+    if (days > 0) {
+      result += `${days}d`;
+    }
+    if (hours > 0) {
+      if (result) {
+        result += ' ';
+      }
+      result += `${hours}h`;
+    }
+    if (minutes > 0) {
+      if (result) {
+        result += ' ';
+      }
+      result += `${minutes}min`;
+    }
+  }
+  return result;
 }
