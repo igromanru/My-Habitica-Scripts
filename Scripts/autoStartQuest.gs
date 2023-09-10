@@ -43,8 +43,10 @@ function autoStartQuest() {
     if (party && party.quest) {
       if (party.quest.key && !party.quest.active) {
         const startQuestAfterXHoursAsMs = AUTO_START_QUEST_AFTER_X_HOURS * 60 * 60 * 1000;
+        console.log(`The quest will be started after ${AUTO_START_QUEST_AFTER_X_HOURS} hour(s)`);
         if ((new Date() - questInvited) >= startQuestAfterXHoursAsMs) {
           if (forceStartQuest()) {
+            deleteQuestIvitedDateTime();
             console.log(`autoStartQuest: Quest started`);
           }
         }
@@ -56,7 +58,6 @@ function autoStartQuest() {
   } else {
     console.error(`autoStartQuest: Last quest invited date time is unknown`);
   }
-  
 }
 
 /**
