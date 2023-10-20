@@ -1,16 +1,26 @@
 /**
  * Author: Igromanru
  * Source: https://github.com/igromanru/My-Habitica-Scripts
- * Version: 0.1.3
+ * Version: 0.2.0
  * Description: The script starts the quest automatically after X hours. 
  *              You have to be the Party Leader or Quest Owner to be able to start the quest before all members have accepted the invite.
  * Dependencies: Igromanru's Habitica Library (https://github.com/igromanru/Igromanrus-Habitica-Library)
  * 
  * Installation Guide:
- *  1. Fill USER_ID and API_TOKEN with your UserId and the ApiToken
- *  2. Deploy the script as WebApp
- *  3. Copy the WebApp URL into the WEB_APP_URL variable
- *  4. Run the installAutoStartQuest() function
+ *  1. Follow the README of the Igromanru's Habitica Library (https://github.com/igromanru/Igromanrus-Habitica-Library) to add the library to the project
+ *  2. Fill USER_ID and API_TOKEN with your UserId and the ApiToken
+ *  3. Deploy the script as WebApp
+ *  4. Copy the WebApp URL into the WEB_APP_URL variable
+ *  5. Run the installAutoStartQuest() function
+ * Update Guide
+ *  1. To update the script, first execute the uninstallAutoStartQuest() function
+ *  2. Select the part that you want to replace or the whole script and replace with the new version
+ *  3. Fill USER_ID and API_TOKEN with your UserId and the ApiToken
+ *  4. Open "Deploy"->"Manage deployments", in the top right corner click on "Edit". 
+ *     Under "Version" select "New Version", give it a new Description and click "Deploy".
+ *     (This way you will redeploy new code, but you will keep the old WebApp URL)
+ *     If the "WEB_APP_URL" variable is empty, copy the WebApp URL from the new deployment in there.
+ *  4. Run installAutoStartQuest() to setup the new version of the script
  */
 // ------------- Set Up ---------------------------------------
 const USER_ID = "";
@@ -19,6 +29,12 @@ const WEB_APP_URL = "";
 // --------- Configurations -----------------------------------
 const AUTO_START_QUEST = true;
 const AUTO_START_QUEST_AFTER_X_HOURS = 14;
+const AUTO_START_IF_INACTIVE_MEMBERS_LEFT = true;
+const AUTO_START_IF_INACTIVE_MEMBERS_LEFT_AXTER_X_HOURS = 6;
+
+// When a member should be considered inactive
+const MEMBERS_INACTIVE_AFTER_X_DAYS = 2; 
+const AND_MEMBERS_INACTIVE_AFTER_X_HOURS = 0;
 
 // If you install the trigger, it will execute autoStartQuest each X hours
 const TRIGGER_AUTO_START_QUEST_EACH_X_HOURS = 1;
@@ -27,6 +43,7 @@ const TRIGGER_AUTO_START_QUEST_EACH_X_HOURS = 1;
 const QUEST_ACTIVITY_WEBHOOK_NAME = `${DriveApp.getFileById(ScriptApp.getScriptId()).getName()}-Quest-Activity`;
 const ScriptProperties = PropertiesService.getScriptProperties();
 
+// Initialize the Habitica Library
 Habitica.initialize(USER_ID, API_TOKEN, ScriptProperties);
 
 /**
@@ -35,21 +52,29 @@ Habitica.initialize(USER_ID, API_TOKEN, ScriptProperties);
 function autoStartQuest() {
   const questInvited = getQuestIvitedDateTime(); 
   if (questInvited && questInvited instanceof Date) {
-    console.log(`Invited to the quest: ${Habitica.getTimeDifferenceToNowAsString(questInvited)}`);
+    console.log(`Invited to the quest: ${JSON.stringify(Habitica.getTimeDifferenceToNow(questInvited))}`);
     const party = Habitica.getParty();
     if (party && party.quest) {
       if (party.quest.key && !party.quest.active) {
         const startQuestAfterXHoursAsMs = AUTO_START_QUEST_AFTER_X_HOURS * 60 * 60 * 1000;
+        const startQuestIfInactiveMembersLeftAfterXHoursAsMs = AUTO_START_IF_INACTIVE_MEMBERS_LEFT_AXTER_X_HOURS * 60 * 60 * 1000;
+        const questInvitedDiff = new Date() - questInvited;
         console.log(`The quest will be started after ${AUTO_START_QUEST_AFTER_X_HOURS} hour(s)`);
-        if ((new Date() - questInvited) >= startQuestAfterXHoursAsMs) {
+        let onlyInactiveMembersLeft = false;
+        if (AUTO_START_IF_INACTIVE_MEMBERS_LEFT && questInvitedDiff >= startQuestIfInactiveMembersLeftAfterXHoursAsMs) {
+          console.log(`Or after ${AUTO_START_IF_INACTIVE_MEMBERS_LEFT_AXTER_X_HOURS} hour(s) if only inactive members haven't accpted it`);
+          onlyInactiveMembersLeft = checkIfOnlyInactiveMembersLeft();
+          console.log(`autoStartQuest: onlyInactiveMembersLeft: ${onlyInactiveMembersLeft}`);
+        }
+        if (questInvitedDiff >= startQuestAfterXHoursAsMs || onlyInactiveMembersLeft) {
           if (Habitica.forceStartQuest()) {
             deleteQuestIvitedDateTime();
-            console.log(`autoStartQuest: Quest started`);
+            console.info(`autoStartQuest: Quest started`);
           }
         }
       } else {
         deleteQuestIvitedDateTime();
-        console.log(`autoStartQuest: Skipping, no quest or the quest is already active`);
+        console.info(`autoStartQuest: Skipping, no quest or the quest is already active`);
       }
     }
   } else {
@@ -163,6 +188,29 @@ function doPost(e) {
   }
 }
 
+function checkIfOnlyInactiveMembersLeft() {
+  const partyMembers = Habitica.getPartyMembers(true);
+  if (partyMembers && partyMembers.length > 0) {
+    for (const member of partyMembers) {
+      if (member && member.party._id && member.party.quest.key && member.party.quest.RSVPNeeded === true) {
+        const lastCheckin = new Date(member.auth.timestamps.loggedin);
+        const timeDifference = Habitica.getTimeDifferenceToNow(lastCheckin);
+        if (!timeDifference) {
+          console.error(`checkIfOnlyInactiveMembersLeft: Member: ${member.profile.name}\ntimeDifference: ${JSON.stringify(timeDifference)}`);
+          continue;
+        }
+
+        // Check if member is active
+        if (!member.preferences.sleep && !(timeDifference.days >= MEMBERS_INACTIVE_AFTER_X_DAYS && timeDifference.hours >= AND_MEMBERS_INACTIVE_AFTER_X_HOURS)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+  return false;
+}
+
 function setQuestIvitedDateTime(dateTime = new Date()) {
   ScriptProperties.setProperty("QUEST_INVITED_DATE_TIME", dateTime.toISOString());
 }
@@ -172,6 +220,7 @@ function getQuestIvitedDateTime() {
   if (typeof value === 'string' && value) {
     return new Date(value);
   }
+  console.warn(`getQuestIvitedDateTime: QuestIvitedDateTime isn't set!`)
   return new Date();
 }
 
