@@ -1,7 +1,7 @@
 /**
  * Author: Igromanru
  * Source: https://github.com/igromanru/My-Habitica-Scripts
- * Version: 0.1.2
+ * Version: 0.1.3
  * Description: Script that automatically buys Enchanted Armoire and sends information about received items to the user
  */
 // ------------- Set Up ---------------------------------------
@@ -19,6 +19,7 @@ const TRIGGER_AUTO_BUY_ENCHANTED_ARMOIRE_EACH_X_HOURS = 4;
 const Headers = {
   'x-api-user': USER_ID,
   'x-api-key': API_TOKEN,
+  'x-client': USER_ID + '-' + DriveApp.getFileById(ScriptApp.getScriptId()).getName()
 };
 const baseUrl = 'https://habitica.com/api';
 const userAPI = baseUrl + '/v3/user';
