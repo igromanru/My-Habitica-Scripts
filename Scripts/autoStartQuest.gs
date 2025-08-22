@@ -202,6 +202,7 @@ function checkIfOnlyInactiveMembersLeft() {
 
         // Check if member is active
         if (!member.preferences.sleep && !(timeDifference.days >= MEMBERS_INACTIVE_AFTER_X_DAYS && timeDifference.hours >= AND_MEMBERS_INACTIVE_AFTER_X_HOURS)) {
+          console.log(`checkIfOnlyInactiveMembersLeft: Member ${member.profile.name} is still active with last cron: ${JSON.stringify(timeDifference)} ago`);
           return false;
         }
       }
