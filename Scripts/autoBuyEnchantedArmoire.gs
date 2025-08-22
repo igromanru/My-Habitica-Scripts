@@ -2,6 +2,7 @@
  * Author: Igromanru
  * Source: https://github.com/igromanru/My-Habitica-Scripts
  * Version: 0.1.3
+ * Last Updated: 22.08.2025
  * Description: Script that automatically buys Enchanted Armoire and sends information about received items to the user
  */
 // ------------- Set Up ---------------------------------------

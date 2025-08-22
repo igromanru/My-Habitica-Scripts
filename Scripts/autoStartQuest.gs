@@ -2,6 +2,7 @@
  * Author: Igromanru
  * Source: https://github.com/igromanru/My-Habitica-Scripts
  * Version: 0.2.0
+ * Last Updated: 22.08.2025
  * Description: The script starts the quest automatically after X hours. 
  *              You have to be the Party Leader or Quest Owner to be able to start the quest before all members have accepted the invite.
  * Dependencies: Igromanru's Habitica Library (https://github.com/igromanru/Igromanrus-Habitica-Library)

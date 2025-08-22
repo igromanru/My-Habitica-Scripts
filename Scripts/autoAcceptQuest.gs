@@ -2,14 +2,14 @@
  * Author: Igromanru
  * Source: https://github.com/igromanru/My-Habitica-Scripts
  * Version: 0.1.0
- * Last Update: 22.08.2025
+ * Last Updated: 22.08.2025
  * Description: The script automatically tries to accepts any quest invite
  * Dependencies: Igromanru's Habitica Library (https://github.com/igromanru/Igromanrus-Habitica-Library)
  * 
  * Installation Guide:
- *  1. Follow the README of the Igromanru's Habitica Library (https://github.com/igromanru/Igromanrus-Habitica-Library) to add the library to the project
+ *  1. Navigate to the "Overview" tab of the script and click the "Make a copy" button in the top-right corner of the screen
  *  2. Fill USER_ID and API_TOKEN with your UserId and the ApiToken
- *  3. Run the installAutoAcceptQuest() function
+ *  3. Run the installAutoAcceptQuest() function (Give Google all the permissions it asks for)
  * Update Guide
  *  1. To update the script, first execute the uninstallAutoAcceptQuest() function
  *  2. Select the part that you want to replace or the whole script and replace with the new version
@@ -34,10 +34,45 @@ Habitica.initialize(USER_ID, API_TOKEN, ScriptProperties);
  * Installs triggers and WebHooks
  */
 function installAutoAcceptQuest() {
+  uninstallAutoAcceptQuest();
+  console.log("Creating triggers...");
+
+  let trigger = ScriptApp.newTrigger(autoAcceptQuestTrigger_.name)
+    .timeBased()
+    .everyMinutes(AUTO_ACCEPT_QUEST_EACH_X_MINUTES)
+    .create();
+  
+  if (trigger) {
+    console.log("Trigger created for: " + trigger.getHandlerFunction());
+  }
 }
 
 /**
  * Uninstalls triggers and WebHooks
  */
 function uninstallAutoAcceptQuest() {
+  const triggers = ScriptApp.getProjectTriggers();
+  if (triggers.length > 0) {
+    console.log("Deleting all triggers");
+
+    for (const trigger of triggers) {
+      const functionName = trigger.getHandlerFunction();
+      if (functionName == autoStartQuestTrigger.name
+          || functionName == createAutoStartQuestWebhooks.name) {
+        ScriptApp.deleteTrigger(trigger);
+        console.log("Trigger deleted: " + functionName);
+      }
+    }
+  }
+}
+
+/**
+ * Time based trigger function to automatically accept quests
+ */
+function autoAcceptQuestTrigger_() {
+  if (Habitica.acceptQuest()) {
+    console.log("Quest invite was accepted");
+  } else {
+    console.log("No quest invitation found or already accepted");
+  }
 }
