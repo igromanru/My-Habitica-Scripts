@@ -10,6 +10,7 @@
  *  1. Navigate to the "Overview" tab of the script and click the "Make a copy" button in the top-right corner of the screen
  *  2. Fill USER_ID and API_TOKEN with your UserId and the ApiToken
  *  3. Run the installAutoAcceptQuest() function (Give Google all the permissions it asks for)
+ * 
  * Update Guide
  *  1. To update the script, first execute the uninstallAutoAcceptQuest() function
  *  2. Select the part that you want to replace or the whole script and replace with the new version
@@ -57,8 +58,7 @@ function uninstallAutoAcceptQuest() {
 
     for (const trigger of triggers) {
       const functionName = trigger.getHandlerFunction();
-      if (functionName == autoStartQuestTrigger.name
-          || functionName == createAutoStartQuestWebhooks.name) {
+      if (functionName == autoAcceptQuestTrigger_.name) {
         ScriptApp.deleteTrigger(trigger);
         console.log("Trigger deleted: " + functionName);
       }
